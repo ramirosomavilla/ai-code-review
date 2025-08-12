@@ -27,12 +27,31 @@ const main = async () => {
     }
 
     const commentBody = `${AI_REVIEW_COMMENT_PREFIX}${inputProcessor.headCommit}${SUMMARY_SEPARATOR}${reviewSummary}`;
-    await inputProcessor.githubAPI.createPRComment(
+    // Update existing AI summary comment if present; otherwise create a new one
+    const existingComments = await inputProcessor.githubAPI.listPRComments(
       inputProcessor.owner,
       inputProcessor.repo,
-      inputProcessor.pullNumber,
-      commentBody
+      inputProcessor.pullNumber
     );
+    const existingSummary = [...existingComments]
+      .reverse()
+      .find((c) => c.body && c.body.startsWith(AI_REVIEW_COMMENT_PREFIX));
+
+    if (existingSummary) {
+      await inputProcessor.githubAPI.updatePRComment(
+        inputProcessor.owner,
+        inputProcessor.repo,
+        existingSummary.id,
+        commentBody
+      );
+    } else {
+      await inputProcessor.githubAPI.createPRComment(
+        inputProcessor.owner,
+        inputProcessor.repo,
+        inputProcessor.pullNumber,
+        commentBody
+      );
+    }
   } catch (error) {
     if (inputProcessor.failAction) {
       core.debug(error.stack);

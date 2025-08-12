@@ -123,6 +123,16 @@ class GitHubAPI {
     });
   }
 
+  async updatePRComment(owner, repo, commentId, body) {
+    core.info(`updatePRComment(${commentId})`);
+    await this.octokit.rest.issues.updateComment({
+      owner,
+      repo,
+      comment_id: commentId,
+      body,
+    });
+  }
+
   async createReviewComment(
     owner,
     repo,
